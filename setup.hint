@@ -1,0 +1,5 @@
+category: Graphics
+requires: mono mono-glib-sharp2.0 mono-gtk-sharp2.0 mono-pango-sharp2.0
+sdesc: "Paint.NET clone for GTK+/Mono"
+ldesc: "Pinta is a drawing/editing program modeled after Paint.NET. It's 
+goal is to provide a simplified alternative to GIMP for casual users."
