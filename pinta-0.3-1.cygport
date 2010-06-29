@@ -9,6 +9,7 @@ src_compile() {
 
 	lndirs
 	cd ${B}
+	mkdir -p bin
 
 	for png in Pinta.Resources/Resources/*.png
 	do
@@ -26,8 +27,8 @@ src_compile() {
 
 	${GMCS} -unsafe -target:library -out:bin/Pinta.Gui.Widgets.dll \
 			$(find Pinta.Gui.Widgets/ -name '*.cs') -res:Pinta.Gui.Widgets/gtk-gui/gui.stetic \
-			-pkg:gtk-sharp-2.0 -r:Mono.Posix.dll \
-			|| error "gmcs Pinta.Resources.dll failed"
+			-r:bin/Pinta.Core.dll -pkg:gtk-sharp-2.0 -r:Mono.Cairo.dll -r:Mono.Posix.dll \
+			|| error "gmcs Pinta.Gui.Widgets.dll failed"
 
 	${GMCS} -unsafe -target:exe -out:bin/Pinta.exe \
 			$(find Pinta/ -name '*.cs') -res:Pinta/gtk-gui/gui.stetic \
