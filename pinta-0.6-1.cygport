@@ -1,0 +1,82 @@
+GIT_URI="git://github.com/jpobst/Pinta.git"
+GIT_BRANCH="release-${PV}"
+inherit mono git
+
+HOMEPAGE="http://www.pinta-project.com/"
+
+src_compile() {
+	local ref res
+
+	lndirs
+	cd ${B}
+	mkdir -p bin
+
+	ref="-pkg:gtk-sharp-2.0 -r:Mono.Cairo.dll -r:Mono.Posix.dll -r:ICSharpCode.SharpZipLib.dll"
+
+	for png in Pinta.Resources/Resources/*.png
+	do
+		res+=" -res:$png"
+	done
+
+	${GMCS} -unsafe -target:library -out:bin/Pinta.Resources.dll \
+			Pinta.Resources/*.cs ${res} ${ref} \
+			|| error "gmcs Pinta.Resources.dll failed"
+
+	ref="-r:bin/Pinta.Resources.dll ${ref}"
+
+	for lib in Pinta.Core Pinta.Tools Pinta.Gui.Widgets Pinta.Effects
+	do
+		res=
+		if [ -f ${lib}/gtk-gui/gui.stetic ]
+		then
+			res="-res:${lib}/gtk-gui/gui.stetic"
+		fi
+
+		${GMCS} -unsafe -target:library -out:bin/${lib}.dll \
+			$(find ${lib} -name '*.cs') ${res} ${ref} \
+			|| error "gmcs ${lib}.dll failed"
+
+		ref="-r:bin/${lib}.dll ${ref}"
+	done
+
+	${GMCS} -unsafe -target:exe -out:bin/Pinta.exe \
+			$(find Pinta/ -name '*.cs') -res:Pinta/gtk-gui/gui.stetic ${ref} \
+			|| error "gmcs Pinta.exe failed"
+
+	cd ${B}/po
+	for m in *.po
+	do
+		l=${m%.po}
+		l=${l#messages-}
+		msgfmt -o ${l}.gmo ${m}
+	done
+}
+
+src_install() {
+	cd ${B}
+	insinto /usr/lib/${PN}
+	doins bin/*
+
+	mono_wrapper pinta /usr/lib/${PN}/Pinta.exe
+
+	cd ${B}/po
+	for m in *.gmo
+	do
+		l=${m%.gmo}
+		insinto /usr/share/locale/${l}/LC_MESSAGES
+		newins ${m} ${PN}.mo
+	done
+
+	cd ${S}/xdg
+
+	for i in 16x16 22x22 24x24 32x32 96x96 scalable
+	do
+		insinto /usr/share/icons/hicolor/${i}/apps
+		doins ${i}/pinta.*
+	done
+
+	domenu pinta.desktop
+	doman pinta.1
+}
+
+DOCS="*.txt"
