@@ -1,8 +1,7 @@
-GIT_URI="git://github.com/jpobst/Pinta.git"
-GIT_BRANCH="release-${PV}"
-inherit mono git
+inherit mono
 
 HOMEPAGE="http://www.pinta-project.com/"
+SRC_URI="http://github.com/downloads/PintaProject/Pinta/${P}.tar.gz"
 
 src_compile() {
 	local ref res
@@ -11,16 +10,16 @@ src_compile() {
 	cd ${B}
 	mkdir -p bin
 
-	ref="-pkg:gtk-sharp-2.0 -r:Mono.Cairo.dll -r:Mono.Posix.dll -r:ICSharpCode.SharpZipLib.dll"
+	ref="-pkg:gtk-sharp-2.0 -pkg:mono-addins-gui -r:Mono.Cairo.dll -r:Mono.Posix.dll -r:ICSharpCode.SharpZipLib.dll -r:System.ComponentModel.Composition.dll"
 
 	for png in Pinta.Resources/Resources/*.png
 	do
 		res+=" -res:$png"
 	done
 
-	${GMCS} -unsafe -target:library -out:bin/Pinta.Resources.dll \
+	${DMCS} -unsafe -target:library -out:bin/Pinta.Resources.dll \
 			Pinta.Resources/*.cs ${res} ${ref} \
-			|| error "gmcs Pinta.Resources.dll failed"
+			|| error "dmcs Pinta.Resources.dll failed"
 
 	ref="-r:bin/Pinta.Resources.dll ${ref}"
 
@@ -32,16 +31,16 @@ src_compile() {
 			res="-res:${lib}/gtk-gui/gui.stetic"
 		fi
 
-		${GMCS} -unsafe -target:library -out:bin/${lib}.dll \
+		${DMCS} -unsafe -target:library -out:bin/${lib}.dll \
 			$(find ${lib} -name '*.cs') ${res} ${ref} \
-			|| error "gmcs ${lib}.dll failed"
+			|| error "dmcs ${lib}.dll failed"
 
 		ref="-r:bin/${lib}.dll ${ref}"
 	done
 
-	${GMCS} -unsafe -target:exe -out:bin/Pinta.exe \
+	${DMCS} -unsafe -target:exe -out:bin/Pinta.exe \
 			$(find Pinta/ -name '*.cs') -res:Pinta/gtk-gui/gui.stetic ${ref} \
-			|| error "gmcs Pinta.exe failed"
+			|| error "dmcs Pinta.exe failed"
 
 	cd ${B}/po
 	for m in *.po
@@ -50,6 +49,9 @@ src_compile() {
 		l=${l#messages-}
 		msgfmt -o ${l}.gmo ${m}
 	done
+
+	cd ${B}/xdg
+	LC_ALL=C intltool-merge -d -u ../po pinta.desktop.in pinta.desktop
 }
 
 src_install() {
@@ -67,7 +69,7 @@ src_install() {
 		newins ${m} ${PN}.mo
 	done
 
-	cd ${S}/xdg
+	cd ${B}/xdg
 
 	for i in 16x16 22x22 24x24 32x32 96x96 scalable
 	do
