@@ -1,5 +1,12 @@
 inherit mono
 
+NAME="pinta"
+VERSION=1.4
+RELEASE=1
+CATEGORY="Graphics"
+SUMMARY="Paint.NET clone for GTK+/Mono"
+DESCRIPTION="Pinta is a drawing/editing program modeled after Paint.NET. It's
+goal is to provide a simplified alternative to GIMP for casual users."
 HOMEPAGE="http://www.pinta-project.com/"
 SRC_URI="http://github.com/downloads/PintaProject/Pinta/${P}.tar.gz"
 
